@@ -14,7 +14,6 @@ import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.ws.addressing.WSAddressingFeature;
 import org.fenixedu.academic.domain.Person;
-import org.fenixedu.bennu.core.domain.User;
 import org.fenixedu.idcards.IdCardsConfiguration;
 import org.fenixedu.idcards.domain.SantanderPhotoEntry;
 import org.slf4j.Logger;
@@ -32,9 +31,10 @@ import pt.sibscartoes.portal.wcf.tui.dto.TuiSignatureRegisterData;
 
 public class SantanderRequestCardService {
 
+
     private static Logger logger = LoggerFactory.getLogger(SantanderRequestCardService.class);
 
-    public static String getRegister(User user) {
+    public static String getRegister(Person person) {
 
         JaxWsProxyFactoryBean factory = new JaxWsProxyFactoryBean();
 
@@ -57,7 +57,7 @@ public class SantanderRequestCardService {
         http.getAuthorization().setUserName(IdCardsConfiguration.getConfiguration().sibsWebServiceUsername());
         http.getAuthorization().setPassword(IdCardsConfiguration.getConfiguration().sibsWebServicePassword());
 
-        final String userName = Strings.padEnd(user.getUsername(), 10, 'x');
+        final String userName = Strings.padEnd(person.getUsername(), 10, 'x');
 
         RegisterData statusInformation = port.getRegister(userName);
 
