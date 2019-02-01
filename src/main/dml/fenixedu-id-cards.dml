@@ -46,7 +46,6 @@ class SantanderEntryNew {
     DateTime createdAt;
     DateTime expiryDate;
     boolean registerSuccessful;
-    boolean cardIssued;
     String errorDescription;
 }
 
