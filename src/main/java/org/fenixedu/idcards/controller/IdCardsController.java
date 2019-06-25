@@ -5,6 +5,7 @@ import org.fenixedu.bennu.core.domain.User;
 import org.fenixedu.bennu.core.groups.Group;
 import org.fenixedu.bennu.core.security.SkipCSRF;
 import org.fenixedu.commons.i18n.I18N;
+import org.fenixedu.idcards.domain.SantanderCardInfo;
 import org.fenixedu.idcards.domain.SantanderCardState;
 import org.fenixedu.idcards.domain.SantanderEntry;
 import org.fenixedu.idcards.service.SantanderIdCardsService;
@@ -18,11 +19,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.fenixedu.idcards.domain.SantanderCardInfo;
 
 import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
+
 import pt.ist.fenixframework.FenixFramework;
 
 @RestController
@@ -68,14 +70,15 @@ public class IdCardsController {
 
     @SkipCSRF
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<?> requestCard(@RequestHeader("X-Requested-With") String requestedWith, User user) {
+    public ResponseEntity<?> requestCard(@RequestHeader("X-Requested-With") String requestedWith, User user,
+            @RequestParam("requestReason") String requestReason) {
 
         if (!cardService.canRequestCard(user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         try {
-            SantanderEntry entry = cardService.createRegister(user);
+            SantanderEntry entry = cardService.createRegister(user, requestReason);
             cardService.sendRegister(user, entry);
         } catch (SantanderValidationException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

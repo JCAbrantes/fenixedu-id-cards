@@ -81,7 +81,7 @@ public class SantanderEntry extends SantanderEntry_Base {
             updateState(SantanderCardState.EXPIRED, cardExpiryTime);
     }
 
-    public SantanderEntry(User user, CardPreviewBean cardPreviewBean, PickupLocation pickupLocation) {
+    public SantanderEntry(User user, CardPreviewBean cardPreviewBean, PickupLocation pickupLocation, String requestReason) {
         setBennu(Bennu.getInstance());
         SantanderEntry currentEntry = user.getCurrentSantanderEntry();
         if (currentEntry != null) {
@@ -89,8 +89,7 @@ public class SantanderEntry extends SantanderEntry_Base {
             currentEntry.setNext(this);
         }
         setUser(user);
-
-        reset(cardPreviewBean, pickupLocation);
+        reset(cardPreviewBean, pickupLocation, requestReason);
     }
 
     public CardPreviewBean getCardPreviewBean() {
@@ -109,7 +108,8 @@ public class SantanderEntry extends SantanderEntry_Base {
         return getSantanderCardInfo().getFirstTransictionDate();
     }
 
-    public void reset(CardPreviewBean cardPreviewBean, PickupLocation pickupLocation) {
+    public void reset(CardPreviewBean cardPreviewBean, PickupLocation pickupLocation, String requestReason) {
+        setRequestReason(requestReason);
         setRequestLine(cardPreviewBean.getRequestLine());
         setResponseLine("");
         setErrorDescription("");

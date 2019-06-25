@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
+
 import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.Atomic.TxMode;
 
@@ -220,22 +221,23 @@ public class SantanderIdCardsService {
         }
     }
 
-    public SantanderEntry createRegister(User user) throws SantanderValidationException {
+    public SantanderEntry createRegister(User user, String requestReason) throws SantanderValidationException {
         List<RegisterAction> availableActions = getPersonAvailableActions(user);
 
         if (availableActions.contains(RegisterAction.NOVO)) {
-            return createRegister(user, RegisterAction.NOVO);
+            return createRegister(user, RegisterAction.NOVO, requestReason);
         } else if (availableActions.contains(RegisterAction.RENU)) {
-            return createRegister(user, RegisterAction.RENU);
+            return createRegister(user, RegisterAction.RENU, requestReason);
         } else if (availableActions.contains(RegisterAction.REMI)) {
-            return createRegister(user, RegisterAction.REMI);
+            return createRegister(user, RegisterAction.REMI, requestReason);
         } else {
             throw new SantanderValidationException("User cannot request a card at the moment!");
         }
 
     }
 
-    public SantanderEntry createRegister(User user, RegisterAction action) throws SantanderValidationException {
+    public SantanderEntry createRegister(User user, RegisterAction action, String requestReason)
+            throws SantanderValidationException {
         if (!getPersonAvailableActions(user.getCurrentSantanderEntry()).contains(action)) {
             throw new RuntimeException("Action (" + action.name() + ") not available for user " + user.getUsername());
         }
@@ -244,7 +246,7 @@ public class SantanderIdCardsService {
         CreateRegisterRequest createRegisterRequest = santanderUser.toCreateRegisterRequest(action);
 
         CardPreviewBean cardPreviewBean = santanderCardService.generateCardRequest(createRegisterRequest);
-        return createOrResetEntry(user, cardPreviewBean, santanderUser.getUserPickupLocation());
+        return createOrResetEntry(user, cardPreviewBean, santanderUser.getUserPickupLocation(), requestReason);
     }
 
     @Atomic(mode = TxMode.READ)
@@ -261,24 +263,25 @@ public class SantanderIdCardsService {
     }
 
     @Atomic(mode = TxMode.WRITE)
-    private SantanderEntry createOrResetEntry(User user, CardPreviewBean cardPreviewBean, PickupLocation pickupLocation) {
+    private SantanderEntry createOrResetEntry(User user, CardPreviewBean cardPreviewBean, PickupLocation pickupLocation,
+            String requestReason) {
         SantanderEntry entry = user.getCurrentSantanderEntry();
 
         if (entry == null) {
-            return new SantanderEntry(user, cardPreviewBean, pickupLocation);
+            return new SantanderEntry(user, cardPreviewBean, pickupLocation, requestReason);
         }
 
         SantanderCardState cardState = entry.getState();
 
         switch (cardState) {
         case IGNORED:
-            entry.reset(cardPreviewBean, pickupLocation);
+            entry.reset(cardPreviewBean, pickupLocation, requestReason);
             return entry;
         case REJECTED:
         case ISSUED:
         case DELIVERED:
         case EXPIRED:
-            return new SantanderEntry(user, cardPreviewBean, pickupLocation);
+            return new SantanderEntry(user, cardPreviewBean, pickupLocation, requestReason);
         default:
             //should be impossible to reach;
             throw new RuntimeException();
